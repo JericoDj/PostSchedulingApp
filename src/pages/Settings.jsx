@@ -4,9 +4,25 @@ import { Settings as SettingsIcon, Facebook, Instagram, Play, Linkedin, External
 import { GlassCard, Button } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://scheduling-api-xi.vercel.app';
+const isLocalHost = (host) => {
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+};
+
+const enforceHttpsForPublicUrl = (urlString) => {
+  try {
+    const parsed = new URL(urlString);
+    if (parsed.protocol === 'http:' && !isLocalHost(parsed.hostname)) {
+      parsed.protocol = 'https:';
+    }
+    return parsed.toString().replace(/\/$/, '');
+  } catch (_) {
+    return urlString;
+  }
+};
+
+const API_BASE_URL = enforceHttpsForPublicUrl(
+  import.meta.env.VITE_API_BASE_URL || 'https://scheduling-api-xi.vercel.app'
+);
 const FRONTEND_BASE_URL = window.location.origin;
 
 const PLATFORM_CONNECTIONS = [
@@ -109,7 +125,16 @@ export const Settings = () => {
                 <p className="text-slate-400 text-sm mt-3 flex-1">{platform.description}</p>
 
                 {platform.available ? (
-                  <a href={platform.connectUrl} className="mt-5">
+                  <a
+                    href={platform.connectUrl}
+                    className="mt-5"
+                    onClick={() => {
+                      console.log('[SOCIAL CONNECT CLICK]', {
+                        provider: platform.id,
+                        connectUrl: platform.connectUrl,
+                      });
+                    }}
+                  >
                     <Button className="w-full">
                       Connect {platform.name}
                       <ExternalLink size={16} />
