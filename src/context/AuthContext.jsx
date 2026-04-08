@@ -1,0 +1,155 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+
+const AuthContext = createContext();
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  'https://scheduling-api-xi.vercel.app';
+
+const TOKEN_KEY = 'token';
+const USER_KEY = 'auth_user';
+
+const getErrorMessage = async (response, fallbackMessage) => {
+  try {
+    const data = await response.json();
+    if (data?.message) {
+      return data.message;
+    }
+  } catch (_) {
+    // Ignore parse issues and return fallback.
+  }
+
+  return fallbackMessage;
+};
+
+const saveAuthState = (token, user) => {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+};
+
+const clearAuthState = () => {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_KEY);
+};
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const initializeAuth = async () => {
+      const token = localStorage.getItem(TOKEN_KEY);
+      const savedUser = localStorage.getItem(USER_KEY);
+
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      if (savedUser) {
+        try {
+          setUser(JSON.parse(savedUser));
+        } catch (_) {
+          localStorage.removeItem(USER_KEY);
+        }
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          clearAuthState();
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        const me = await response.json();
+        setUser(me);
+        localStorage.setItem(USER_KEY, JSON.stringify(me));
+      } catch (_) {
+        // Keep cached user on temporary network failures.
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
+  }, []);
+
+  const login = async (email, password) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Login failed'));
+    }
+
+    const data = await response.json();
+    saveAuthState(data.token, data.user);
+    setUser(data.user);
+    return data.user;
+  };
+
+  const register = async ({ name, email, password, avatar_url }) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name, email, password, avatar_url }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Registration failed'));
+    }
+
+    const data = await response.json();
+    saveAuthState(data.token, data.user);
+    setUser(data.user);
+    return data.user;
+  };
+
+  const getMe = async () => {
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+      return null;
+    }
+
+    const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Failed to load current user'));
+    }
+
+    const me = await response.json();
+    setUser(me);
+    localStorage.setItem(USER_KEY, JSON.stringify(me));
+    return me;
+  };
+
+  const logout = () => {
+    clearAuthState();
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, login, register, getMe, logout, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => useContext(AuthContext);
