@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Zap, ArrowRight, Github, Chrome } from 'lucide-react';
 import { GlassCard, Button, Input } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+
+
 
 export const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -13,8 +15,32 @@ export const Auth = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { login, register } = useAuth();
+  const { login, register, loginWithFacebook } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.statusChangeCallback = async function(response) {
+      console.log('statusChangeCallback', response);
+      if (response.status === 'connected') {
+        try {
+          await loginWithFacebook(response.authResponse.accessToken, response.authResponse.userID);
+          navigate('/dashboard');
+        } catch (err) {
+          setError(err.message || 'Facebook login failed');
+        }
+      } else {
+        console.log('Not authenticated with Facebook');
+      }
+    };
+
+    window.checkLoginState = function() {
+      if (window.FB) {
+        window.FB.getLoginStatus(function(response) {
+          window.statusChangeCallback(response);
+        });
+      }
+    };
+  }, [loginWithFacebook, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -114,10 +140,12 @@ export const Auth = () => {
                 <Chrome size={18} />
                 Google
               </Button>
-              <Button variant="outline" type="button" className="py-2.5">
-                <Github size={18} />
-                GitHub
-              </Button>
+              <div className="flex justify-center items-center h-full">
+                <fb:login-button 
+                  scope="public_profile,email"
+                  onlogin="checkLoginState();">
+                </fb:login-button>
+              </div>
             </div>
           </form>
         </GlassCard>

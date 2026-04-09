@@ -140,13 +140,32 @@ export const AuthProvider = ({ children }) => {
     return me;
   };
 
+  const loginWithFacebook = async (accessToken, userID) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/facebook/verify`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ accessToken, userID }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Facebook login failed'));
+    }
+
+    const data = await response.json();
+    saveAuthState(data.token, data.user);
+    setUser(data.user);
+    return data.user;
+  };
+
   const logout = () => {
     clearAuthState();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, getMe, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, loginWithFacebook, getMe, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
