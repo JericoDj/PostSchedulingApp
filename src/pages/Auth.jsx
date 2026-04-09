@@ -142,7 +142,7 @@ export const Auth = () => {
               </Button>
               <div className="flex justify-center items-center h-full">
                 <fb:login-button 
-                  scope="public_profile"
+                  scope="public_profile,email"
                   onlogin="checkLoginState();">
                 </fb:login-button>
               </div>
