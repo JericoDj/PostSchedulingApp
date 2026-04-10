@@ -43,8 +43,10 @@ const PLATFORM_CONNECTIONS = [
     description: 'Set up Instagram publishing and media scheduling.',
     icon: Instagram,
     color: 'text-pink-400',
-    connectUrl: '#',
-    available: false,
+    connectUrl: `${API_BASE_URL}/api/oauth/instagram?redirect=${encodeURIComponent(
+      `${FRONTEND_BASE_URL}/oauth/callback`
+    )}`,
+    available: true,
   },
   {
     id: 'tiktok',
