@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'motion/react';
-import { Settings as SettingsIcon, Facebook, Instagram, Play, Linkedin, ExternalLink } from 'lucide-react';
+import { Settings as SettingsIcon, Facebook, Instagram, Play, Linkedin, ExternalLink, AtSign } from 'lucide-react';
 import { GlassCard, Button } from '../components/UI';
 import { useAuth } from '../context/AuthContext';
 
@@ -44,6 +44,17 @@ const PLATFORM_CONNECTIONS = [
     icon: Instagram,
     color: 'text-pink-400',
     connectUrl: `${API_BASE_URL}/api/oauth/instagram?redirect=${encodeURIComponent(
+      `${FRONTEND_BASE_URL}/oauth/callback`
+    )}`,
+    available: true,
+  },
+  {
+    id: 'threads',
+    name: 'Threads',
+    description: 'Connect Threads to publish and schedule conversation-first updates.',
+    icon: AtSign,
+    color: 'text-zinc-200',
+    connectUrl: `${API_BASE_URL}/api/oauth/threads?redirect=${encodeURIComponent(
       `${FRONTEND_BASE_URL}/oauth/callback`
     )}`,
     available: true,
