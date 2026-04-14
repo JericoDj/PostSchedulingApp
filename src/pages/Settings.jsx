@@ -65,8 +65,10 @@ const PLATFORM_CONNECTIONS = [
     description: 'Enable TikTok video scheduling and posting workflow.',
     icon: Play,
     color: 'text-white',
-    connectUrl: '#',
-    available: false,
+    connectUrl: `${API_BASE_URL}/api/oauth/tiktok?redirect=${encodeURIComponent(
+      `${FRONTEND_BASE_URL}/oauth/callback`
+    )}`,
+    available: true,
   },
   {
     id: 'linkedin',
