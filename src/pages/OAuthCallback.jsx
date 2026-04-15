@@ -14,6 +14,7 @@ export const OAuthCallback = () => {
   const expiresIn = query.get('expires_in');
   const error = query.get('error');
   const description = query.get('description');
+  const storageKey = provider === 'x' ? 'x_token' : `${provider}_oauth_token`;
 
   useEffect(() => {
     if (status === 'success' && accessToken) {
@@ -25,9 +26,9 @@ export const OAuthCallback = () => {
         connected_at: new Date().toISOString(),
       };
 
-      localStorage.setItem(`${provider}_oauth_token`, JSON.stringify(payload));
+      localStorage.setItem(storageKey, JSON.stringify(payload));
     }
-  }, [status, accessToken, tokenType, expiresIn, provider]);
+  }, [status, accessToken, tokenType, expiresIn, provider, storageKey]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
