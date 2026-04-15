@@ -9,8 +9,9 @@ import {
   Clock,
   Facebook,
   Instagram,
-  Twitter,
   Play,
+  Linkedin,
+  Youtube,
   PlusSquare
 } from 'lucide-react';
 import { GlassCard, Button } from '../components/UI';
@@ -41,7 +42,10 @@ const PlatformIcon = ({ platform }) => {
     case 'facebook': return <Facebook size={16} className="text-blue-500" />;
     case 'instagram': return <Instagram size={16} className="text-pink-500" />;
     case 'tiktok': return <Play size={16} className="text-white" />;
-    case 'twitter': return <Twitter size={16} className="text-sky-400" />;
+    case 'x': return <span className="text-slate-100 text-xs font-bold">X</span>;
+    case 'linkedin': return <Linkedin size={16} className="text-sky-400" />;
+    case 'youtube': return <Youtube size={16} className="text-red-400" />;
+    case 'pinterest': return <span className="text-red-500 text-xs font-bold">P</span>;
     default: return null;
   }
 };
@@ -173,4 +177,3 @@ export const Dashboard = () => {
     </div>
   );
 };
-

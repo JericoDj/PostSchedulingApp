@@ -10,9 +10,10 @@ import {
   Facebook, 
   Instagram, 
   Play, 
-  Twitter,
+  Linkedin,
+  Youtube,
   Upload,
-  X,
+  X as XClose,
   CheckCircle2,
   AlertCircle
 } from 'lucide-react';
@@ -21,11 +22,40 @@ import { useApp } from '../context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../utils/cn';
 
+const XBrandIcon = ({ size = 18, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    className={className}
+  >
+    <path d="M18.901 2H21.99l-6.75 7.714L23.176 22h-6.211l-4.864-6.488L6.423 22H3.332l7.219-8.249L.823 2h6.37l4.397 5.893L18.901 2Zm-1.084 18.146h1.711L6.276 3.758H4.44l13.377 16.388Z" />
+  </svg>
+);
+
+const PinterestIcon = ({ size = 18, className = '' }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+    className={className}
+  >
+    <path d="M12 2a10 10 0 0 0-3.64 19.32c-.05-.82-.1-2.08.02-2.98.11-.77.73-4.92.73-4.92s-.19-.38-.19-.94c0-.89.52-1.55 1.16-1.55.55 0 .82.41.82.91 0 .55-.35 1.38-.53 2.15-.15.65.32 1.18.96 1.18 1.14 0 2.01-1.2 2.01-2.93 0-1.53-1.1-2.6-2.67-2.6-1.82 0-2.89 1.36-2.89 2.77 0 .55.21 1.14.48 1.46.05.06.06.12.04.19-.04.21-.14.65-.16.74-.03.12-.09.15-.22.09-.83-.39-1.35-1.62-1.35-2.61 0-2.12 1.54-4.07 4.44-4.07 2.33 0 4.14 1.66 4.14 3.89 0 2.32-1.46 4.19-3.48 4.19-.68 0-1.31-.35-1.53-.78l-.42 1.6c-.15.58-.56 1.3-.83 1.74A10 10 0 1 0 12 2Z" />
+  </svg>
+);
+
 const PLATFORMS = [
   { id: 'facebook', name: 'Facebook', icon: Facebook, color: 'text-blue-500', allowed: ['image', 'video', 'text'] },
   { id: 'instagram', name: 'Instagram', icon: Instagram, color: 'text-pink-500', allowed: ['image', 'video'] },
   { id: 'tiktok', name: 'TikTok', icon: Play, color: 'text-white', allowed: ['video'] },
-  { id: 'twitter', name: 'Twitter', icon: Twitter, color: 'text-sky-400', allowed: ['image', 'video', 'text'] },
+  { id: 'x', name: 'X', icon: XBrandIcon, color: 'text-slate-100', allowed: ['image', 'video', 'text'] },
+  { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'text-sky-400', allowed: ['image', 'video', 'text'] },
+  { id: 'youtube', name: 'YouTube', icon: Youtube, color: 'text-red-400', allowed: ['video'] },
+  { id: 'pinterest', name: 'Pinterest', icon: PinterestIcon, color: 'text-red-500', allowed: ['image', 'video'] },
 ];
 
 export const CreatePost = () => {
@@ -197,7 +227,7 @@ export const CreatePost = () => {
                     )}
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Button variant="danger" onClick={(e) => { e.stopPropagation(); setMedia(null); }}>
-                        <X size={18} /> Remove
+                        <XClose size={18} /> Remove
                       </Button>
                     </div>
                   </div>
