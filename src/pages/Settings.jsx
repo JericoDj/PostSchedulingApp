@@ -138,7 +138,7 @@ const PLATFORM_CONNECTIONS = [
     connectUrl: `${API_BASE_URL}/api/oauth/pinterest?redirect=${encodeURIComponent(
       `${FRONTEND_BASE_URL}/oauth/callback`
     )}`,
-    available: true,
+    available: false,
   },
 ];
 
