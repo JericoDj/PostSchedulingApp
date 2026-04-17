@@ -97,6 +97,7 @@ export const AuthProvider = ({ children }) => {
     console.log(API_BASE_URL);
     console.log(email);
     console.log(password);
+    console.log(LoginRoute);
 
     const response = await fetch(LoginRoute, {
       method: 'POST',
