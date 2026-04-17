@@ -1,11 +1,9 @@
-import React, { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import React, { useMemo, useState } from 'react';
+import { motion } from 'motion/react';
 import { 
   Image as ImageIcon, 
   Video, 
-  Type, 
   Calendar, 
-  Clock, 
   Sparkles, 
   Facebook, 
   Instagram, 
@@ -14,7 +12,6 @@ import {
   Youtube,
   Upload,
   X as XClose,
-  CheckCircle2,
   AlertCircle
 } from 'lucide-react';
 import { GlassCard, Button, Input } from '../components/UI';
@@ -67,8 +64,21 @@ export const CreatePost = () => {
   const [media, setMedia] = useState(null);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
+  const [scheduleTimezone, setScheduleTimezone] = useState(
+    Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  );
   const [isDragging, setIsDragging] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  const timezoneOptions = useMemo(() => {
+    if (typeof Intl.supportedValuesOf === 'function') {
+      return Intl.supportedValuesOf('timeZone');
+    }
+
+    return ['UTC', 'Asia/Manila', 'America/New_York'];
+  }, []);
 
   const togglePlatform = (id) => {
     setSelectedPlatforms(prev => 
@@ -113,18 +123,28 @@ export const CreatePost = () => {
     }, 1500);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content || selectedPlatforms.length === 0) return;
 
-    addPost({
-      content,
-      platforms: selectedPlatforms,
-      scheduledFor: `${scheduledDate}T${scheduledTime}`,
-      type: media ? media.type : 'text',
-      media: media?.url
-    });
-    navigate('/scheduled');
+    setSubmitError('');
+    setIsSubmitting(true);
+
+    try {
+      await addPost({
+        content,
+        platforms: selectedPlatforms,
+        scheduledLocal: `${scheduledDate}T${scheduledTime}`,
+        scheduleTimezone,
+        type: media ? media.type : 'text',
+        media: media?.url,
+      });
+      navigate('/scheduled');
+    } catch (error) {
+      setSubmitError(String(error.message || error));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isPlatformValid = (platformId) => {
@@ -141,6 +161,12 @@ export const CreatePost = () => {
           <p className="text-slate-400 mt-1">Design and schedule your content across platforms.</p>
         </div>
       </div>
+
+      {submitError && (
+        <GlassCard className="border-red-500/40 bg-red-500/10">
+          <p className="text-red-300 text-sm">{submitError}</p>
+        </GlassCard>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Editor Section */}
@@ -257,7 +283,7 @@ export const CreatePost = () => {
               <Calendar size={20} className="text-indigo-400" />
               Schedule Post
             </h3>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input 
                 type="date" 
                 label="Date" 
@@ -270,6 +296,23 @@ export const CreatePost = () => {
                 value={scheduledTime}
                 onChange={(e) => setScheduledTime(e.target.value)}
               />
+            </div>
+            <div className="mt-4">
+              <label className="text-sm font-medium text-slate-400 mb-2 block">Timezone</label>
+              <select
+                className="glass-input w-full"
+                value={scheduleTimezone}
+                onChange={(e) => setScheduleTimezone(e.target.value)}
+              >
+                {timezoneOptions.map((timezone) => (
+                  <option key={timezone} value={timezone}>
+                    {timezone}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500 mt-2">
+                Scheduled time will be interpreted in this timezone and stored in UTC.
+              </p>
             </div>
           </GlassCard>
         </div>
@@ -319,9 +362,9 @@ export const CreatePost = () => {
               <Button 
                 className="w-full py-4 text-lg" 
                 onClick={handleSubmit}
-                disabled={!content || selectedPlatforms.length === 0 || !scheduledDate || !scheduledTime}
+                disabled={!content || selectedPlatforms.length === 0 || !scheduledDate || !scheduledTime || isSubmitting}
               >
-                Schedule Post
+                {isSubmitting ? 'Scheduling...' : 'Schedule Post'}
               </Button>
               <Button variant="outline" className="w-full">Save as Draft</Button>
             </div>

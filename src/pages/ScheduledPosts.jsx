@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { 
   Calendar as CalendarIcon, 
   Clock, 
-  MoreVertical, 
+  MoreVertical,
   Facebook, 
   Instagram, 
   Play, 
@@ -12,7 +12,6 @@ import {
   Edit3,
   Trash2,
   Filter,
-  Search,
   Plus
 } from 'lucide-react';
 import { GlassCard, Button, Input } from '../components/UI';
@@ -33,8 +32,45 @@ const PlatformIcon = ({ platform }) => {
 };
 
 export const ScheduledPosts = () => {
-  const { scheduledPosts } = useApp();
+  const { scheduledPosts, refreshScheduledPosts } = useApp();
   const [filter, setFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const load = async () => {
+      setLoading(true);
+      setError('');
+
+      try {
+        await refreshScheduledPosts();
+      } catch (loadError) {
+        if (isMounted) {
+          setError(String(loadError.message || loadError));
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [refreshScheduledPosts]);
+
+  const filteredPosts = useMemo(() => {
+    if (filter === 'all') {
+      return scheduledPosts;
+    }
+
+    return scheduledPosts.filter((post) => post.platforms.includes(filter));
+  }, [filter, scheduledPosts]);
 
   return (
     <div className="space-y-8">
@@ -69,7 +105,13 @@ export const ScheduledPosts = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-4">
-        {scheduledPosts.length === 0 ? (
+        {loading ? (
+          <GlassCard className="py-12 text-center text-slate-300">Loading scheduled posts...</GlassCard>
+        ) : error ? (
+          <GlassCard className="py-12 text-center text-red-300 border-red-500/40 bg-red-500/10">
+            {error}
+          </GlassCard>
+        ) : filteredPosts.length === 0 ? (
           <GlassCard className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 rounded-full bg-white/5 flex items-center justify-center text-slate-600 mb-4">
               <CalendarIcon size={40} />
@@ -79,7 +121,7 @@ export const ScheduledPosts = () => {
             <Button className="mt-6" onClick={() => window.location.href = '/create'}>Create Post</Button>
           </GlassCard>
         ) : (
-          scheduledPosts.map((post, index) => (
+          filteredPosts.map((post, index) => (
             <motion.div
               key={post.id}
               initial={{ opacity: 0, x: -20 }}
@@ -121,6 +163,10 @@ export const ScheduledPosts = () => {
                     </div>
                   </div>
                   <p className="text-white font-medium truncate pr-4">{post.content}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Timezone: {post.timezone || 'UTC'}
+                    {post.scheduledLocal ? ` • Local: ${post.scheduledLocal}` : ''}
+                  </p>
                 </div>
 
                 {/* Status & Actions */}

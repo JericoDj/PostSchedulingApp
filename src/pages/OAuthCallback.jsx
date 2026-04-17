@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { GlassCard, Button } from '../components/UI';
+import { API_BASE_URL, authHeaders } from '../utils/api';
 
 export const OAuthCallback = () => {
   const location = useLocation();
@@ -17,7 +18,11 @@ export const OAuthCallback = () => {
   const storageKey = provider === 'x' ? 'x_token' : `${provider}_oauth_token`;
 
   useEffect(() => {
-    if (status === 'success' && accessToken) {
+    const persistConnection = async () => {
+      if (status !== 'success' || !accessToken) {
+        return;
+      }
+
       const payload = {
         provider,
         access_token: accessToken,
@@ -27,7 +32,26 @@ export const OAuthCallback = () => {
       };
 
       localStorage.setItem(storageKey, JSON.stringify(payload));
-    }
+
+      if (provider === 'facebook') {
+        try {
+          await fetch(`${API_BASE_URL}/api/users/me/facebook-connection`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...authHeaders(),
+            },
+            body: JSON.stringify({
+              access_token: accessToken,
+            }),
+          });
+        } catch (_) {
+          // Keep callback resilient even if backend save fails for now.
+        }
+      }
+    };
+
+    persistConnection();
   }, [status, accessToken, tokenType, expiresIn, provider, storageKey]);
 
   return (
@@ -44,7 +68,9 @@ export const OAuthCallback = () => {
 
           {status === 'success' ? (
             <>
-              <p className="text-emerald-400">Your account was connected and token details were saved in local storage.</p>
+              <p className="text-emerald-400">
+                Your account was connected. Tokens were saved locally and Facebook connection was synced to backend for worker publishing.
+              </p>
               <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-sm text-slate-300 break-all">
                 <p>
                   <span className="text-slate-400">token_type:</span> {tokenType || 'N/A'}

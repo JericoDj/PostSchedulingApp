@@ -1,20 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { API_BASE_URL } from '../utils/api';
 
 const AuthContext = createContext();
-const getApiBaseUrl = () => {
-  if (import.meta.env.VITE_API_BASE_URL) {
-    return import.meta.env.VITE_API_BASE_URL;
-  }
-
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:5000';
-  }
-
-
-  return 'https://scheduling-api-xi.vercel.app';
-};
-
-const API_BASE_URL = getApiBaseUrl();
 
 const TOKEN_KEY = 'token';
 const USER_KEY = 'auth_user';
