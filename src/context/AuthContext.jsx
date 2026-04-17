@@ -2,21 +2,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
 const getApiBaseUrl = () => {
-  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL;
-  const forceRemote = String(import.meta.env.VITE_API_FORCE_REMOTE || '').toLowerCase() === 'true';
-  const isLocalHost =
-    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (import.meta.env.VITE_API_BASE_URL) {
+    return import.meta.env.VITE_API_BASE_URL;
+  }
 
-  // In local development, default to local backend unless explicitly forced.
-  if (isLocalHost && !forceRemote) {
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:5000';
   }
 
-  if (configuredBaseUrl) {
-    return configuredBaseUrl;
-  }
-
-  return 'https://scheduling-dod52w3cg-jericos-projects-f568a5b3.vercel.app';
+  return 'https://scheduling-api-xi.vercel.app';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -97,15 +91,25 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    console.log("Login attempt");
+    console.log(API_BASE_URL);
+    console.log(email);
+    console.log(password);
+
     const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
+      credentials: 'include', // 🔥 THIS IS THE FIX
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
     });
 
+    console.log("getting here");
+
     if (!response.ok) {
+      console.log("Login failed");
+      console.log(response);
       throw new Error(await getErrorMessage(response, 'Login failed'));
     }
 
