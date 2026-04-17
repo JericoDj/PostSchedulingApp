@@ -92,12 +92,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (email, password) => {
+    const LoginRoute = `${API_BASE_URL}/api/auth/login`;
     console.log("Login attempt");
     console.log(API_BASE_URL);
     console.log(email);
     console.log(password);
 
-    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+    const response = await fetch(LoginRoute, {
       method: 'POST',
       credentials: 'include', // 🔥 THIS IS THE FIX
       headers: {
