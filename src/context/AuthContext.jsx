@@ -159,13 +159,30 @@ export const AuthProvider = ({ children }) => {
     return data.user;
   };
 
+  const forgotPassword = async (email) => {
+    const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      throw new Error(await getErrorMessage(response, 'Forgot password request failed'));
+    }
+
+    const data = await response.json();
+    return data.message || 'Reset instructions sent';
+  };
+
   const logout = () => {
     clearAuthState();
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, loginWithFacebook, getMe, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, forgotPassword, loginWithFacebook, getMe, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
