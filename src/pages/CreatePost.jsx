@@ -55,7 +55,7 @@ const PLATFORMS = [
   { id: 'x', name: 'X', icon: XBrandIcon, color: 'text-slate-100', allowed: ['image', 'video', 'text'] },
   { id: 'linkedin', name: 'LinkedIn', icon: Linkedin, color: 'text-sky-400', allowed: ['image', 'video', 'text'] },
   { id: 'youtube', name: 'YouTube', icon: Youtube, color: 'text-red-400', allowed: ['video'] },
-  { id: 'pinterest', name: 'Pinterest', icon: PinterestIcon, color: 'text-red-500', allowed: ['image', 'video'] },
+  { id: 'pinterest', name: 'Pinterest', icon: PinterestIcon, color: 'text-red-500', allowed: ['image', 'video'], comingSoon: true },
 ];
 
 export const CreatePost = () => {
@@ -152,7 +152,7 @@ export const CreatePost = () => {
                 <label className="text-sm font-medium text-slate-400 mb-3 block">Select Platforms</label>
                 <div className="flex flex-wrap gap-3">
                   {PLATFORMS.map(platform => {
-                    const isValid = isPlatformValid(platform.id);
+                    const isValid = isPlatformValid(platform.id) && !platform.comingSoon;
                     const isSelected = selectedPlatforms.includes(platform.id);
                     
                     return (
@@ -170,6 +170,11 @@ export const CreatePost = () => {
                       >
                         <platform.icon size={18} className={isSelected ? platform.color : ""} />
                         <span className="font-medium">{platform.name}</span>
+                        {platform.comingSoon && (
+                          <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full border text-amber-400 border-amber-500/30 bg-amber-500/10">
+                            Coming Soon
+                          </span>
+                        )}
                         {!isValid && <AlertCircle size={14} className="text-red-400" />}
                       </button>
                     );

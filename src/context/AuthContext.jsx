@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const AuthContext = createContext();
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  'https://scheduling-api-xi.vercel.app';
+  'https://scheduling-dod52w3cg-jericos-projects-f568a5b3.vercel.app';
 
 const TOKEN_KEY = 'token';
 const USER_KEY = 'auth_user';
