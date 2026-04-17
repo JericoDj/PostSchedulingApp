@@ -10,6 +10,7 @@ const getApiBaseUrl = () => {
     return 'http://localhost:5000';
   }
 
+
   return 'https://scheduling-api-xi.vercel.app';
 };
 
