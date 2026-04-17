@@ -1,9 +1,25 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext();
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ||
-  'https://scheduling-dod52w3cg-jericos-projects-f568a5b3.vercel.app';
+const getApiBaseUrl = () => {
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL;
+  const forceRemote = String(import.meta.env.VITE_API_FORCE_REMOTE || '').toLowerCase() === 'true';
+  const isLocalHost =
+    window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+  // In local development, default to local backend unless explicitly forced.
+  if (isLocalHost && !forceRemote) {
+    return 'http://localhost:5000';
+  }
+
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  return 'https://scheduling-dod52w3cg-jericos-projects-f568a5b3.vercel.app';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const TOKEN_KEY = 'token';
 const USER_KEY = 'auth_user';
