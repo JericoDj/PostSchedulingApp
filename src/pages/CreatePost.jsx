@@ -12,7 +12,11 @@ import {
   Youtube,
   Upload,
   X as XClose,
-  AlertCircle
+  AlertCircle,
+  Loader2,
+  Check,
+  Zap,
+  Clock
 } from 'lucide-react';
 import { GlassCard, Button, Input } from '../components/UI';
 import { useApp } from '../context/AppContext';
@@ -55,13 +59,26 @@ const PLATFORMS = [
   { id: 'pinterest', name: 'Pinterest', icon: PinterestIcon, color: 'text-red-500', allowed: ['image', 'video'], comingSoon: true },
 ];
 
+const FORMAT_CATEGORIES = [
+  { id: 'general', label: 'General' },
+  { id: 'portrait', label: 'Portrait (4:5)' },
+  { id: 'landscape', label: 'Landscape (16:9)' },
+  { id: 'square', label: 'Square (1:1)' },
+  { id: 'tiktok', label: 'TikTok (9:16)' },
+  { id: 'shorts', label: 'YouTube Shorts (9:16)' },
+  { id: 'reels', label: 'Reels (9:16)' },
+  { id: 'facebook_cover', label: 'Facebook Cover' },
+];
+
 export const CreatePost = () => {
-  const { addPost } = useApp();
+  const { addPost, publishNow } = useApp();
   const navigate = useNavigate();
   
+  const [postMode, setPostMode] = useState('schedule'); // 'now' | 'schedule'
   const [content, setContent] = useState('');
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
-  const [media, setMedia] = useState(null);
+  const [media, setMedia] = useState(null); // { url: localPreviewUrl, type: 'image'|'video', name, rawFile: File }
+  const [formatCategory, setFormatCategory] = useState('general');
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
   const [scheduleTimezone, setScheduleTimezone] = useState(
@@ -70,6 +87,7 @@ export const CreatePost = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
   const [submitError, setSubmitError] = useState('');
 
   const timezoneOptions = useMemo(() => {
@@ -103,20 +121,17 @@ export const CreatePost = () => {
   };
 
   const handleFile = (file) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      setMedia({
-        url: e.target.result,
-        type: file.type.startsWith('video') ? 'video' : 'image',
-        name: file.name
-      });
-    };
-    reader.readAsDataURL(file);
+    const url = URL.createObjectURL(file);
+    setMedia({
+      url,
+      type: file.type.startsWith('video') ? 'video' : 'image',
+      name: file.name,
+      rawFile: file,
+    });
   };
 
   const generateAiCaption = () => {
     setAiLoading(true);
-    // Mock AI generation
     setTimeout(() => {
       setContent("Unlocking the future of social automation! 🚀✨ #SocialSync #Automation #TechTrends");
       setAiLoading(false);
@@ -126,22 +141,35 @@ export const CreatePost = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!content || selectedPlatforms.length === 0) return;
+    if (postMode === 'schedule' && (!scheduledDate || !scheduledTime)) return;
 
     setSubmitError('');
     setIsSubmitting(true);
+    setUploadProgress(media ? 0 : null);
 
     try {
-      await addPost({
-        content,
-        platforms: selectedPlatforms,
-        scheduledLocal: `${scheduledDate}T${scheduledTime}`,
-        scheduleTimezone,
-        type: media ? media.type : 'text',
-        media: media?.url,
-      });
-      navigate('/scheduled');
+      if (postMode === 'now') {
+        await publishNow({
+          content,
+          platforms: selectedPlatforms,
+          rawFile: media?.rawFile ?? null,
+          formatCategory,
+        });
+        navigate('/scheduled');
+      } else {
+        await addPost({
+          content,
+          platforms: selectedPlatforms,
+          scheduledLocal: `${scheduledDate}T${scheduledTime}`,
+          scheduleTimezone,
+          rawFile: media?.rawFile ?? null,
+          formatCategory,
+        });
+        navigate('/scheduled');
+      }
     } catch (error) {
       setSubmitError(String(error.message || error));
+      setUploadProgress(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -173,6 +201,44 @@ export const CreatePost = () => {
         <div className="lg:col-span-2 space-y-6">
           <GlassCard>
             <div className="space-y-6">
+              {/* Post Mode Toggle */}
+              <div>
+                <label className="text-sm font-medium text-slate-400 mb-3 block">Post Mode</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPostMode('now')}
+                    className={cn(
+                      "flex items-center justify-center gap-2 px-4 py-3 rounded-xl border transition-all duration-200 font-medium text-sm",
+                      postMode === 'now'
+                        ? "bg-emerald-600/20 border-emerald-500 text-emerald-300"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20"
+                    )}
+                  >
+                    <Zap size={16} />
+                    Post Now
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPostMode('schedule')}
+                    className={cn(
+                      "flex items-center justify-center gap-2 px-4 py-3 rounded-xl border transition-all duration-200 font-medium text-sm",
+                      postMode === 'schedule'
+                        ? "bg-indigo-600/20 border-indigo-500 text-indigo-300"
+                        : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20"
+                    )}
+                  >
+                    <Clock size={16} />
+                    Schedule
+                  </button>
+                </div>
+                {postMode === 'now' && (
+                  <p className="text-xs text-emerald-400/70 mt-2 flex items-center gap-1">
+                    <Zap size={10} /> Will publish immediately to connected Facebook page.
+                  </p>
+                )}
+              </div>
+
               {/* Platform Selection */}
               <div>
                 <label className="text-sm font-medium text-slate-400 mb-3 block">Select Platforms</label>
@@ -256,6 +322,11 @@ export const CreatePost = () => {
                     ) : (
                       <img src={media.url} alt="Preview" className="w-full h-full object-cover" />
                     )}
+                    <div className="absolute top-2 left-2">
+                      <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-black/60 text-white border border-white/20">
+                        {media.type === 'video' ? '🎬 Video' : '🖼 Image'}
+                      </span>
+                    </div>
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Button variant="danger" onClick={(e) => { e.stopPropagation(); setMedia(null); }}>
                         <XClose size={18} /> Remove
@@ -270,15 +341,39 @@ export const CreatePost = () => {
                     <div className="text-center">
                       <p className="text-white font-medium">Click or drag media to upload</p>
                       <p className="text-slate-500 text-sm mt-1">Supports images and videos up to 50MB</p>
+                      <p className="text-slate-600 text-xs mt-1">Uploaded to Firebase Storage automatically</p>
                     </div>
                   </>
                 )}
               </div>
+
+              {/* Format Category - only show when media is selected */}
+              {media && (
+                <div>
+                  <label className="text-sm font-medium text-slate-400 mb-2 block">Format / Aspect Ratio</label>
+                  <div className="flex flex-wrap gap-2">
+                    {FORMAT_CATEGORIES.map(fc => (
+                      <button
+                        key={fc.id}
+                        onClick={() => setFormatCategory(fc.id)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-lg border text-xs font-medium transition-all duration-200",
+                          formatCategory === fc.id
+                            ? "bg-indigo-600/20 border-indigo-500 text-indigo-300"
+                            : "bg-white/5 border-white/10 text-slate-400 hover:border-white/20"
+                        )}
+                      >
+                        {fc.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </GlassCard>
 
-          {/* Scheduling */}
-          <GlassCard>
+          {/* Scheduling — only show when in schedule mode */}
+          {postMode === 'schedule' && <GlassCard>
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <Calendar size={20} className="text-indigo-400" />
               Schedule Post
@@ -314,7 +409,7 @@ export const CreatePost = () => {
                 Scheduled time will be interpreted in this timezone and stored in UTC.
               </p>
             </div>
-          </GlassCard>
+          </GlassCard>}
         </div>
 
         {/* Preview Section */}
@@ -359,12 +454,51 @@ export const CreatePost = () => {
             </GlassCard>
 
             <div className="mt-8 space-y-4">
+              {/* Upload Progress */}
+              {uploadProgress !== null && (
+                <div className="rounded-xl bg-white/5 border border-white/10 p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-slate-400 flex items-center gap-1.5">
+                      {uploadProgress < 100 ? (
+                        <Loader2 size={12} className="animate-spin" />
+                      ) : (
+                        <Check size={12} className="text-emerald-400" />
+                      )}
+                      {uploadProgress < 100 ? `Uploading to Firebase... ${uploadProgress}%` : 'Upload complete!'}
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/10 rounded-full h-1.5">
+                    <div
+                      className="bg-indigo-500 h-1.5 rounded-full transition-all duration-300"
+                      style={{ width: `${uploadProgress}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
               <Button 
-                className="w-full py-4 text-lg" 
+                className={cn(
+                  "w-full py-4 text-lg",
+                  postMode === 'now' && "bg-emerald-600 hover:bg-emerald-500"
+                )}
                 onClick={handleSubmit}
-                disabled={!content || selectedPlatforms.length === 0 || !scheduledDate || !scheduledTime || isSubmitting}
+                disabled={
+                  !content || 
+                  selectedPlatforms.length === 0 || 
+                  (postMode === 'schedule' && (!scheduledDate || !scheduledTime)) ||
+                  isSubmitting
+                }
               >
-                {isSubmitting ? 'Scheduling...' : 'Schedule Post'}
+                {isSubmitting ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 size={18} className="animate-spin" />
+                    {uploadProgress !== null && uploadProgress < 100 ? 'Uploading...' : postMode === 'now' ? 'Publishing...' : 'Scheduling...'}
+                  </span>
+                ) : postMode === 'now' ? (
+                  <span className="flex items-center gap-2"><Zap size={18} /> Post Now</span>
+                ) : (
+                  <span className="flex items-center gap-2"><Clock size={18} /> Schedule Post</span>
+                )}
               </Button>
               <Button variant="outline" className="w-full">Save as Draft</Button>
             </div>
