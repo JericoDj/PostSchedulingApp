@@ -33,9 +33,9 @@ export const OAuthCallback = () => {
 
       localStorage.setItem(storageKey, JSON.stringify(payload));
 
-      if (provider === 'facebook') {
+      if (['facebook', 'instagram', 'tiktok', 'threads', 'x', 'linkedin'].includes(provider)) {
         try {
-          await fetch(`${API_BASE_URL}/api/users/me/facebook-connection`, {
+          await fetch(`${API_BASE_URL}/api/users/me/${provider}-connection`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -69,7 +69,7 @@ export const OAuthCallback = () => {
           {status === 'success' ? (
             <>
               <p className="text-emerald-400">
-                Your account was connected. Tokens were saved locally and Facebook connection was synced to backend for worker publishing.
+                Your account was connected. Tokens were saved locally and your backend connection was synced for worker publishing.
               </p>
               <div className="rounded-xl bg-white/5 border border-white/10 p-4 text-sm text-slate-300 break-all">
                 <p>

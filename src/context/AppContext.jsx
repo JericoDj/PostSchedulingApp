@@ -39,6 +39,7 @@ export const AppProvider = ({ children }) => {
       media: content.media_url || content.mediaUrl || null,
       timezone: content.schedule_timezone || 'UTC',
       scheduledLocal: content.scheduled_local || null,
+      providerPostId: post.provider_post_id || null, // Include the API post ID
     };
   };
 
@@ -60,7 +61,7 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const addPost = useCallback(async (post) => {
-    const { content, platforms, scheduledLocal, scheduleTimezone, rawFile, formatCategory } = post;
+    const { content, platforms, scheduledLocal, scheduleTimezone, rawFile, formatCategory, linkedinOptions } = post;
     const userId = currentUserId;
 
     const requests = platforms.map(async (platform) => {
@@ -91,6 +92,12 @@ export const AppProvider = ({ children }) => {
             format_category: formatCategory || null,
             schedule_timezone: scheduleTimezone,
             scheduled_local: scheduledLocal,
+            ...(platform === 'linkedin' && linkedinOptions
+              ? {
+                  linkedin_author_type: linkedinOptions.authorType || 'personal',
+                  linkedin_organization_id: linkedinOptions.organizationId || null,
+                }
+              : {}),
           },
         }),
       });
@@ -120,49 +127,57 @@ export const AppProvider = ({ children }) => {
    * Currently supports: facebook
    */
   const publishNow = useCallback(async (post) => {
-    const { content, platforms, rawFile, formatCategory } = post;
+    const { content, platforms, rawFile, formatCategory, linkedinOptions } = post;
     const userId = currentUserId;
 
-    // For now we handle facebook; other platforms can be added
-    const facebookPlatforms = platforms.filter(p => p === 'facebook');
-    if (facebookPlatforms.length === 0) {
-      throw new Error('Post Now is currently supported for Facebook only');
-    }
+    const requests = platforms.map(async (platform) => {
+      let mediaUrl = null;
+      let mediaType = null;
 
-    let mediaUrl = null;
-    let mediaType = null;
+      if (rawFile && userId) {
+        mediaUrl = await uploadToFirebase(rawFile, platform, userId);
+        mediaType = rawFile.type.startsWith('video/') ? 'video' : 'image';
+      }
 
-    if (rawFile && userId) {
-      mediaUrl = await uploadToFirebase(rawFile, 'facebook', userId);
-      mediaType = rawFile.type.startsWith('video/') ? 'video' : 'image';
-    }
+      const response = await fetch(`${API_BASE_URL}/api/schedule/publish-now`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders(),
+        },
+        body: JSON.stringify({
+          platform,
+          content: content,
+          media_url: mediaUrl,
+          media_type: mediaType,
+          format_category: formatCategory || null,
+          ...(platform === 'linkedin' && linkedinOptions
+            ? {
+                extra_content: {
+                  linkedin_author_type: linkedinOptions.authorType || 'personal',
+                  linkedin_organization_id: linkedinOptions.organizationId || null,
+                },
+              }
+            : {}),
+        }),
+      });
 
-    const response = await fetch(`${API_BASE_URL}/api/facebook-posts/publish-now`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...authHeaders(),
-      },
-      body: JSON.stringify({
-        message: content,
-        media_url: mediaUrl,
-        media_type: mediaType,
-        format_category: formatCategory || null,
-      }),
+      if (!response.ok) {
+        let message = `Failed to post to ${platform}`;
+        try {
+          const payload = await response.json();
+          if (payload?.error) message = payload.error;
+          else if (payload?.message) message = payload.message;
+        } catch (_) {}
+        throw new Error(message);
+      }
+
+      return response.json();
     });
 
-    if (!response.ok) {
-      let message = 'Failed to post to Facebook';
-      try {
-        const payload = await response.json();
-        if (payload?.error) message = payload.error;
-        else if (payload?.message) message = payload.message;
-      } catch (_) {}
-      throw new Error(message);
-    }
-
-    return response.json();
-  }, [currentUserId]);
+    await Promise.all(requests);
+    await refreshScheduledPosts();
+  }, [currentUserId, refreshScheduledPosts]);
 
   const updatePost = useCallback(async (id, postData) => {
     const { content, scheduledLocal, scheduleTimezone } = postData;
