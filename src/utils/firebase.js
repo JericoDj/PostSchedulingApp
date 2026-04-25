@@ -48,8 +48,14 @@ export const uploadToFirebase = (file, platform, userId, onProgress) => {
         reject(error);
       },
       async () => {
-        const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-        resolve(downloadUrl);
+        try {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          console.log('File available at:', downloadUrl);
+          resolve(downloadUrl);
+        } catch (err) {
+          console.error('Error getting download URL:', err);
+          reject(err);
+        }
       }
     );
   });
