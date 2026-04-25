@@ -194,6 +194,10 @@ export const CreatePost = () => {
     loadLinkedInPages();
   }, [selectedPlatforms, linkedinPagesLoaded, linkedinLoading, linkedinAuthorSelectionLocked]);
 
+  const hasInstagramVideoSelected = selectedPlatforms.includes('instagram') && media?.type === 'video';
+  const hasFacebookVideoSelected = selectedPlatforms.includes('facebook') && media?.type === 'video';
+  const showReelsPanel = hasInstagramVideoSelected || hasFacebookVideoSelected;
+
   const togglePlatform = (id) => {
     setSelectedPlatforms(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
   };
@@ -613,32 +617,46 @@ export const CreatePost = () => {
               )}
 
               {/* FB/IG Reels Specific Options */}
-              {(selectedPlatforms.includes('facebook') || selectedPlatforms.includes('instagram')) && media?.type === 'video' && (
+              {showReelsPanel && (
                 <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-4 space-y-4">
                   <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
                     <Video size={16} />
                     Reels Settings
                   </div>
-                  
-                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
-                    <div className="flex flex-col">
-                      <span className="text-sm text-white font-medium">Post as Reel</span>
-                      <span className="text-[10px] text-slate-400 italic">Optimized for vertical short-form video</span>
+
+                  {hasInstagramVideoSelected && (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                      <div className="flex flex-col pr-3">
+                        <span className="text-sm text-white font-medium">Instagram Reel</span>
+                        <span className="text-[10px] text-slate-400 italic">Instagram video posts are sent as reels automatically</span>
+                      </div>
+                      <div className="inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-3 py-1 text-xs font-semibold text-emerald-300">
+                        Auto
+                      </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setIsReels(!isReels)}
-                      className={cn(
-                        "w-12 h-6 rounded-full transition-all duration-200 relative",
-                        isReels ? "bg-indigo-500" : "bg-slate-700"
-                      )}
-                    >
-                      <div className={cn(
-                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200",
-                        isReels ? "left-7" : "left-1"
-                      )} />
-                    </button>
-                  </div>
+                  )}
+
+                  {hasFacebookVideoSelected && (
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                      <div className="flex flex-col">
+                        <span className="text-sm text-white font-medium">Post Facebook video as Reel</span>
+                        <span className="text-[10px] text-slate-400 italic">Optimized for vertical short-form video</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsReels(!isReels)}
+                        className={cn(
+                          "w-12 h-6 rounded-full transition-all duration-200 relative",
+                          isReels ? "bg-indigo-500" : "bg-slate-700"
+                        )}
+                      >
+                        <div className={cn(
+                          "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200",
+                          isReels ? "left-7" : "left-1"
+                        )} />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
 

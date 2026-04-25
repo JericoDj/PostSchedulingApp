@@ -4,6 +4,14 @@ import { uploadToFirebase } from '../utils/firebase';
 
 const AppContext = createContext();
 
+const shouldPublishAsReel = ({ platform, mediaType, isReels }) => {
+  if (platform === 'instagram' && mediaType === 'video') {
+    return true;
+  }
+
+  return !!isReels;
+};
+
 export const AppProvider = ({ children }) => {
   const [scheduledPosts, setScheduledPosts] = useState([]);
   const [currentUserId, setCurrentUserId] = useState(null);
@@ -76,6 +84,12 @@ export const AppProvider = ({ children }) => {
         mediaType = rawFile.type.startsWith('video/') ? 'video' : 'image';
       }
 
+      const platformIsReels = shouldPublishAsReel({
+        platform,
+        mediaType,
+        isReels: is_reels,
+      });
+
       return fetch(`${API_BASE_URL}/api/schedule`, {
         method: 'POST',
         headers: {
@@ -94,7 +108,7 @@ export const AppProvider = ({ children }) => {
             format_category: formatCategory || null,
             schedule_timezone: scheduleTimezone,
             scheduled_local: scheduledLocal,
-            is_reels: !!is_reels,
+            is_reels: platformIsReels,
             is_shorts: !!is_shorts,
             ...(platform === 'linkedin' && linkedinOptions
               ? {
@@ -149,6 +163,12 @@ export const AppProvider = ({ children }) => {
         mediaType = rawFile.type.startsWith('video/') ? 'video' : 'image';
       }
 
+      const platformIsReels = shouldPublishAsReel({
+        platform,
+        mediaType,
+        isReels: is_reels,
+      });
+
       const response = await fetch(`${API_BASE_URL}/api/schedule/publish-now`, {
         method: 'POST',
         headers: {
@@ -161,7 +181,7 @@ export const AppProvider = ({ children }) => {
           media_url: mediaUrl,
           media_type: mediaType,
           format_category: formatCategory || null,
-          is_reels: !!is_reels,
+          is_reels: platformIsReels,
           is_shorts: !!is_shorts,
           ...(platform === 'linkedin' && linkedinOptions
             ? {
