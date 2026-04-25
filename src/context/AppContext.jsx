@@ -31,7 +31,8 @@ export const AppProvider = ({ children }) => {
 
     return {
       id: post.id,
-      content: content.message || content.description || content.title || '',
+      title: content.title || content.youtube_title || null,
+      content: content.message || content.description || '',
       platforms: [post.platform],
       scheduledFor: post.scheduled_at,
       status: post.status === 'posted' ? 'completed' : post.status || 'scheduled',
@@ -39,6 +40,7 @@ export const AppProvider = ({ children }) => {
       media: content.media_url || content.mediaUrl || null,
       timezone: content.schedule_timezone || 'UTC',
       scheduledLocal: content.scheduled_local || null,
+      is_shorts: !!content.is_shorts,
       providerPostId: post.provider_post_id || null, // Include the API post ID
     };
   };
@@ -61,7 +63,7 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const addPost = useCallback(async (post) => {
-    const { content, platforms, scheduledLocal, scheduleTimezone, rawFile, formatCategory, linkedinOptions } = post;
+    const { content, platforms, scheduledLocal, scheduleTimezone, rawFile, formatCategory, linkedinOptions, extra_content } = post;
     const userId = currentUserId;
 
     const requests = platforms.map(async (platform) => {
@@ -98,6 +100,12 @@ export const AppProvider = ({ children }) => {
                   linkedin_organization_id: linkedinOptions.organizationId || null,
                 }
               : {}),
+            ...(platform === 'youtube' && extra_content
+              ? {
+                  title: extra_content.title || 'Untitled Video',
+                  is_shorts: extra_content.is_shorts || false,
+                }
+              : {}),
           },
         }),
       });
@@ -127,7 +135,7 @@ export const AppProvider = ({ children }) => {
    * Currently supports: facebook
    */
   const publishNow = useCallback(async (post) => {
-    const { content, platforms, rawFile, formatCategory, linkedinOptions } = post;
+    const { content, platforms, rawFile, formatCategory, linkedinOptions, extra_content } = post;
     const userId = currentUserId;
 
     const requests = platforms.map(async (platform) => {
@@ -157,6 +165,15 @@ export const AppProvider = ({ children }) => {
                   linkedin_author_type: linkedinOptions.authorType || 'personal',
                   linkedin_organization_id: linkedinOptions.organizationId || null,
                 },
+              }
+            : {}),
+          ...(platform === 'youtube' && extra_content
+            ? {
+                extra_content: {
+                  title: extra_content.title || 'Untitled Video',
+                  is_shorts: extra_content.is_shorts || false,
+                },
+                is_shorts: extra_content.is_shorts || false,
               }
             : {}),
         }),

@@ -309,7 +309,13 @@ export const ScheduledPosts = () => {
                       <Clock size={12} />
                       {new Date(post.scheduledFor).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
+                    {post.is_shorts && (
+                      <span className="text-[10px] font-black bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded border border-red-500/30">
+                        #SHORTS
+                      </span>
+                    )}
                   </div>
+                  {post.title && <p className="text-sm font-bold text-indigo-300 truncate pr-4">{post.title}</p>}
                   <p className="text-white font-medium truncate pr-4">{post.content}</p>
                   <p className="text-xs text-slate-500 mt-1">
                     Timezone: {post.timezone || 'UTC'}

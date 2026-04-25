@@ -123,6 +123,8 @@ export const CreatePost = () => {
   const [linkedinLoadError, setLinkedinLoadError] = useState('');
   const [linkedinPagesLoaded, setLinkedinPagesLoaded] = useState(false);
   const [linkedinAuthorSelectionLocked, setLinkedinAuthorSelectionLocked] = useState(false);
+  const [youtubeTitle, setYoutubeTitle] = useState('');
+  const [isYoutubeShorts, setIsYoutubeShorts] = useState(false);
 
   // Cropper State
   const [srcForCrop, setSrcForCrop] = useState(null);
@@ -332,6 +334,11 @@ export const CreatePost = () => {
           platforms: selectedPlatforms,
           rawFile: media?.rawFile ?? null,
           formatCategory,
+          is_shorts: isYoutubeShorts,
+          extra_content: selectedPlatforms.includes('youtube') ? {
+            title: youtubeTitle || 'Untitled Video',
+            is_shorts: isYoutubeShorts
+          } : null,
           linkedinOptions: selectedPlatforms.includes('linkedin')
             ? {
                 authorType: linkedinAuthorType,
@@ -349,6 +356,10 @@ export const CreatePost = () => {
           scheduleTimezone,
           rawFile: media?.rawFile ?? null,
           formatCategory,
+          extra_content: selectedPlatforms.includes('youtube') ? {
+            title: youtubeTitle || 'Untitled Video',
+            is_shorts: isYoutubeShorts
+          } : null,
           linkedinOptions: selectedPlatforms.includes('linkedin')
             ? {
                 authorType: linkedinAuthorType,
@@ -554,6 +565,47 @@ export const CreatePost = () => {
                       )}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* YouTube Specific Options */}
+              {selectedPlatforms.includes('youtube') && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-4 space-y-4">
+                  <div className="flex items-center gap-2 text-red-400 font-bold text-sm">
+                    <Youtube size={16} />
+                    YouTube Settings
+                  </div>
+                  
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-slate-300 block font-medium">Video Title (Required)</label>
+                    <input
+                      type="text"
+                      className="glass-input w-full"
+                      placeholder="e.g. My Amazing Vlog #2024"
+                      value={youtubeTitle}
+                      onChange={(e) => setYoutubeTitle(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-white font-medium">Upload as YouTube Short</span>
+                      <span className="text-[10px] text-slate-400 italic">Appends #Shorts automatically</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsYoutubeShorts(!isYoutubeShorts)}
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-all duration-200 relative",
+                        isYoutubeShorts ? "bg-red-500" : "bg-slate-700"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200",
+                        isYoutubeShorts ? "left-7" : "left-1"
+                      )} />
+                    </button>
+                  </div>
                 </div>
               )}
 

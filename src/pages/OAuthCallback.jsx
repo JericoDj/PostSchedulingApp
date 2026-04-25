@@ -33,7 +33,7 @@ export const OAuthCallback = () => {
 
       localStorage.setItem(storageKey, JSON.stringify(payload));
 
-      if (['facebook', 'instagram', 'tiktok', 'threads', 'x', 'linkedin'].includes(provider)) {
+      if (['facebook', 'instagram', 'tiktok', 'threads', 'x', 'linkedin', 'youtube'].includes(provider)) {
         try {
           await fetch(`${API_BASE_URL}/api/users/me/${provider}-connection`, {
             method: 'POST',
