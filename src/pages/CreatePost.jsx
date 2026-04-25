@@ -196,7 +196,9 @@ export const CreatePost = () => {
 
   const hasInstagramVideoSelected = selectedPlatforms.includes('instagram') && media?.type === 'video';
   const hasFacebookVideoSelected = selectedPlatforms.includes('facebook') && media?.type === 'video';
+  const hasThreadsSelected = selectedPlatforms.includes('threads');
   const showReelsPanel = hasInstagramVideoSelected || hasFacebookVideoSelected;
+  const hasPostBody = Boolean(content.trim() || media);
 
   const togglePlatform = (id) => {
     setSelectedPlatforms(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]);
@@ -317,7 +319,7 @@ export const CreatePost = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!content || selectedPlatforms.length === 0) return;
+    if (!hasPostBody || selectedPlatforms.length === 0) return;
     if (postMode === 'schedule' && (!scheduledDate || !scheduledTime)) return;
     if (
       selectedPlatforms.includes('linkedin') &&
@@ -676,9 +678,14 @@ export const CreatePost = () => {
                 <textarea
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
-                  placeholder="What's on your mind?"
+                  placeholder={hasThreadsSelected ? "What's happening on Threads?" : "What's on your mind?"}
                   className="w-full h-40 glass-input resize-none p-4"
                 />
+                {hasThreadsSelected && (
+                  <p className="text-xs text-slate-500">
+                    Threads supports text-only, image, and video posts. Media-only posts are allowed.
+                  </p>
+                )}
               </div>
 
               {/* Media Upload */}
@@ -878,7 +885,7 @@ export const CreatePost = () => {
                 )}
                 onClick={handleSubmit}
                 disabled={
-                  !content || 
+                  !hasPostBody || 
                   selectedPlatforms.length === 0 || 
                   (postMode === 'schedule' && (!scheduledDate || !scheduledTime)) ||
                   isSubmitting
