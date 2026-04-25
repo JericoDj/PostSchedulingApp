@@ -11,6 +11,7 @@ export const OAuthCallback = () => {
   const provider = query.get('provider') || 'facebook';
   const status = query.get('status') || 'error';
   const accessToken = query.get('access_token');
+  const refreshToken = query.get('refresh_token');
   const tokenType = query.get('token_type');
   const expiresIn = query.get('expires_in');
   const error = query.get('error');
@@ -26,6 +27,7 @@ export const OAuthCallback = () => {
       const payload = {
         provider,
         access_token: accessToken,
+        refresh_token: refreshToken || null,
         token_type: tokenType || null,
         expires_in: expiresIn ? Number(expiresIn) : null,
         connected_at: new Date().toISOString(),
@@ -43,6 +45,7 @@ export const OAuthCallback = () => {
             },
             body: JSON.stringify({
               access_token: accessToken,
+              refresh_token: refreshToken || null,
             }),
           });
         } catch (_) {
@@ -52,7 +55,7 @@ export const OAuthCallback = () => {
     };
 
     persistConnection();
-  }, [status, accessToken, tokenType, expiresIn, provider, storageKey]);
+  }, [status, accessToken, refreshToken, tokenType, expiresIn, provider, storageKey]);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
