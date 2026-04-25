@@ -125,6 +125,7 @@ export const CreatePost = () => {
   const [linkedinAuthorSelectionLocked, setLinkedinAuthorSelectionLocked] = useState(false);
   const [youtubeTitle, setYoutubeTitle] = useState('');
   const [isYoutubeShorts, setIsYoutubeShorts] = useState(false);
+  const [isReels, setIsReels] = useState(false);
 
   // Cropper State
   const [srcForCrop, setSrcForCrop] = useState(null);
@@ -335,6 +336,7 @@ export const CreatePost = () => {
           rawFile: media?.rawFile ?? null,
           formatCategory,
           is_shorts: isYoutubeShorts,
+          is_reels: isReels,
           extra_content: selectedPlatforms.includes('youtube') ? {
             title: youtubeTitle || 'Untitled Video',
             is_shorts: isYoutubeShorts
@@ -356,6 +358,7 @@ export const CreatePost = () => {
           scheduleTimezone,
           rawFile: media?.rawFile ?? null,
           formatCategory,
+          is_reels: isReels,
           extra_content: selectedPlatforms.includes('youtube') ? {
             title: youtubeTitle || 'Untitled Video',
             is_shorts: isYoutubeShorts
@@ -603,6 +606,36 @@ export const CreatePost = () => {
                       <div className={cn(
                         "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200",
                         isYoutubeShorts ? "left-7" : "left-1"
+                      )} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* FB/IG Reels Specific Options */}
+              {(selectedPlatforms.includes('facebook') || selectedPlatforms.includes('instagram')) && media?.type === 'video' && (
+                <div className="rounded-xl border border-indigo-500/30 bg-indigo-500/10 p-4 space-y-4">
+                  <div className="flex items-center gap-2 text-indigo-400 font-bold text-sm">
+                    <Video size={16} />
+                    Reels Settings
+                  </div>
+                  
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-white/5 border border-white/5">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-white font-medium">Post as Reel</span>
+                      <span className="text-[10px] text-slate-400 italic">Optimized for vertical short-form video</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsReels(!isReels)}
+                      className={cn(
+                        "w-12 h-6 rounded-full transition-all duration-200 relative",
+                        isReels ? "bg-indigo-500" : "bg-slate-700"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-200",
+                        isReels ? "left-7" : "left-1"
                       )} />
                     </button>
                   </div>

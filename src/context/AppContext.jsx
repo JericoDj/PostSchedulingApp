@@ -63,7 +63,7 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   const addPost = useCallback(async (post) => {
-    const { content, platforms, scheduledLocal, scheduleTimezone, rawFile, formatCategory, linkedinOptions, extra_content } = post;
+    const { content, platforms, scheduledLocal, scheduleTimezone, rawFile, formatCategory, linkedinOptions, extra_content, is_reels, is_shorts } = post;
     const userId = currentUserId;
 
     const requests = platforms.map(async (platform) => {
@@ -94,6 +94,8 @@ export const AppProvider = ({ children }) => {
             format_category: formatCategory || null,
             schedule_timezone: scheduleTimezone,
             scheduled_local: scheduledLocal,
+            is_reels: !!is_reels,
+            is_shorts: !!is_shorts,
             ...(platform === 'linkedin' && linkedinOptions
               ? {
                   linkedin_author_type: linkedinOptions.authorType || 'personal',
@@ -135,7 +137,7 @@ export const AppProvider = ({ children }) => {
    * Currently supports: facebook
    */
   const publishNow = useCallback(async (post) => {
-    const { content, platforms, rawFile, formatCategory, linkedinOptions, extra_content } = post;
+    const { content, platforms, rawFile, formatCategory, linkedinOptions, extra_content, is_reels, is_shorts } = post;
     const userId = currentUserId;
 
     const requests = platforms.map(async (platform) => {
@@ -159,6 +161,8 @@ export const AppProvider = ({ children }) => {
           media_url: mediaUrl,
           media_type: mediaType,
           format_category: formatCategory || null,
+          is_reels: !!is_reels,
+          is_shorts: !!is_shorts,
           ...(platform === 'linkedin' && linkedinOptions
             ? {
                 extra_content: {
